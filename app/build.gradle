@@ -58,7 +58,7 @@ afterEvaluate {
                 from components.default
                 groupId = 'xyz.rodit'
                 artifactId = 'xposed'
-                version = android.defaultConfig.versionCode
+                version = android.defaultConfig.versionName
             }
         }
 
