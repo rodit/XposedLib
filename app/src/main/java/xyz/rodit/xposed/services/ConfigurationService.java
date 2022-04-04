@@ -81,6 +81,7 @@ public class ConfigurationService extends Service {
         }
 
         private void handleConfigRequest(Message msg) {
+            Log.d(TAG, "Handling config request.");
             Message response = Message.obtain(null, Messages.CONFIG_VALUE);
             Map<String, String> config = loadConfig();
             Bundle configBundle = new Bundle();
@@ -96,6 +97,7 @@ public class ConfigurationService extends Service {
         }
 
         private void handleMappingsRequest(Message msg) {
+            Log.d(TAG, "Handling mappings request.");
             try {
                 int build = msg.getData().getInt(Messages.MAPPINGS_BUILD_NAME);
                 String mappingsFileName = (build == 0 ? "latest" : String.valueOf(build)) + ".json";

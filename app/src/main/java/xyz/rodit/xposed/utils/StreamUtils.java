@@ -1,9 +1,8 @@
 package xyz.rodit.xposed.utils;
 
-import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,6 +27,13 @@ public class StreamUtils {
     public static String readFile(File file) throws IOException {
         try (Scanner scanner = new Scanner(file)) {
             return scanner.useDelimiter("\\A").next();
+        }
+    }
+
+    public static ByteArrayInputStream toMemoryStream(InputStream src) throws IOException {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            copyTo(src, out);
+            return new ByteArrayInputStream(out.toByteArray());
         }
     }
 }

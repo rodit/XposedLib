@@ -20,8 +20,11 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import xyz.rodit.dexsearch.client.Mappings;
 import xyz.rodit.xposed.client.ConfigurationClient;
 import xyz.rodit.xposed.client.FileClient;
+import xyz.rodit.xposed.client.http.StreamServer;
 
 public abstract class HooksBase implements IXposedHookLoadPackage {
+
+    private static final int DEFAULT_SERVER_THREAD_POOL_SIZE = 8;
 
     private final Set<String> packageNames;
     private final String configurationPackageName;
@@ -33,6 +36,9 @@ public abstract class HooksBase implements IXposedHookLoadPackage {
     protected Context appContext;
     protected ConfigurationClient config;
     protected FileClient files;
+    protected StreamServer server;
+
+    private boolean firstConfig = true;
 
     public HooksBase(@NonNull Collection<String> packageNames) {
         this(packageNames, null, null, null, null);
@@ -53,26 +59,49 @@ public abstract class HooksBase implements IXposedHookLoadPackage {
         }
 
         this.lpparam = lpparam;
+        onPackageLoad();
         if (contextHookClassName != null) {
             Class<?> contextClass = XposedHelpers.findClass(contextHookClassName, lpparam.classLoader);
             XposedBridge.hookAllMethods(contextClass, contextHookMethodName, createContextHook());
         } else {
-            performHooks();
+            performHooksSafe();
         }
     }
 
     protected void bindConfigurationService() {
         if (configurationPackageName != null && configurationActionName != null) {
-            config = new ConfigurationClient(appContext, configurationPackageName, configurationActionName, this::loadMappings);
+            config = new ConfigurationClient(appContext,
+                    configurationPackageName,
+                    configurationActionName,
+                    () -> {
+                        this.onConfigLoaded(firstConfig);
+                        firstConfig = false;
+                    },
+                    this::loadMappings);
             config.bind();
         }
     }
 
-    protected void requireFileService(@NonNull String downloadActionName) {
+    protected boolean requireFileService(@NonNull String downloadActionName) {
         if (appContext != null && configurationPackageName != null) {
             files = new FileClient(appContext, configurationPackageName, downloadActionName);
-            files.bind();
+            return files.bind();
         }
+
+        return false;
+    }
+
+    protected boolean requireStreamServer(int port) {
+        try {
+            server = new StreamServer(port, DEFAULT_SERVER_THREAD_POOL_SIZE);
+            server.start();
+            return true;
+        } catch (IOException e) {
+            XposedBridge.log("Error starting stream server.");
+            XposedBridge.log(e);
+        }
+
+        return false;
     }
 
     private void loadMappings(String content) {
@@ -83,18 +112,41 @@ public abstract class HooksBase implements IXposedHookLoadPackage {
             XposedBridge.log(e);
         }
 
-        performHooks();
+        performHooksSafe();
     }
 
-    protected abstract void performHooks();
+    protected void onPackageLoad() {
+
+    }
+
+    protected void onContextHook(Context contextObject) {
+
+    }
+
+    protected void onConfigLoaded(boolean first) {
+
+    }
+
+    private void performHooksSafe() {
+        try {
+            performHooks();
+        } catch (Throwable t) {
+            XposedBridge.log("Error performing user defined hooks.");
+            XposedBridge.log(t);
+        }
+    }
+
+    protected abstract void performHooks() throws Throwable;
 
     protected XC_MethodHook createContextHook() {
         return new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
                 if (param.thisObject instanceof Context) {
-                    appContext = ((Context) param.thisObject).getApplicationContext();
+                    Context context = (Context) param.thisObject;
+                    appContext = context.getApplicationContext();
                     bindConfigurationService();
+                    onContextHook(context);
                 } else {
                     XposedBridge.log("Failed to acquire application context from context hook method.");
                 }
