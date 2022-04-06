@@ -1,7 +1,5 @@
 package xyz.rodit.xposed.mappings;
 
-import java.io.File;
-
 public enum LoadScheme {
     // Attempt to load latest mappings immediately on package load (very unsafe, no context available yet)
     CACHED_IMMEDIATE,
