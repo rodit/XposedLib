@@ -55,7 +55,7 @@ public class SettingsActivity extends AppCompatActivity {
                     (updatePackage.mappingsUrl != null ? '✓' : '×') +
                     " Mappings\n" +
                     (updatePackage.apkUrl != null ? '✓' : '×') +
-                    " SnapMod APK\n\n" +
+                    " Module APK\n\n" +
                     updatePackage.release.body;
 
             new AlertDialog.Builder(this)
