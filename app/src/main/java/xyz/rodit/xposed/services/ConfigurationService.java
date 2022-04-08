@@ -18,11 +18,11 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import xyz.rodit.xposed.utils.PathUtils;
 import xyz.rodit.xposed.utils.StreamUtils;
 
 public class ConfigurationService extends Service {
@@ -56,13 +56,6 @@ public class ConfigurationService extends Service {
             }
 
             return config;
-        }
-
-        private List<File> getPossibleMappingFiles(String name) {
-            List<File> files = new ArrayList<>();
-            files.add(new File(context.getFilesDir(), name));
-            files.add(new File(context.getExternalFilesDir(null), name));
-            return files;
         }
 
         @Override
@@ -101,7 +94,7 @@ public class ConfigurationService extends Service {
             try {
                 int build = msg.getData().getInt(Messages.MAPPINGS_BUILD_NAME);
                 String mappingsFileName = (build == 0 ? "latest" : String.valueOf(build)) + ".json";
-                List<File> possibleFiles = getPossibleMappingFiles(mappingsFileName);
+                List<File> possibleFiles = PathUtils.getPossibleMappingFiles(context, mappingsFileName);
                 boolean success = false;
                 for (File file : possibleFiles) {
                     Log.d(TAG, "Looking for mappings at " + file + ".");

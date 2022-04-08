@@ -41,6 +41,8 @@ dependencies {
 
     implementation files("libs/clientlib.jar")
 
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+
     compileOnly 'de.robv.android.xposed:api:82'
     compileOnly 'de.robv.android.xposed:api:82:sources'
 }

@@ -6,17 +6,23 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
 
+import xyz.rodit.xposed.updates.UpdateManager;
+import xyz.rodit.xposed.updates.model.UpdatePackage;
 import xyz.rodit.xposed.utils.Consumer;
 
 public class SettingsActivity extends AppCompatActivity {
 
     private static int preferenceResource;
     private static Consumer<SettingsFragment> createCallback;
+
+    protected UpdateManager updates;
 
     public SettingsActivity(int preferenceResource) {
         SettingsActivity.preferenceResource = preferenceResource;
@@ -25,6 +31,8 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        updates = new UpdateManager(this, update -> runOnUiThread(() -> onUpdateFound(update)));
+
         setContentView(R.layout.settings_activity);
         createCallback = this::onCreatePreferences;
 
@@ -41,6 +49,38 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    protected void onUpdateFound(UpdatePackage updatePackage) {
+        if (updatePackage.mappingsUrl != null || updatePackage.apkUrl != null) {
+            String message = "Updates:\n" +
+                    (updatePackage.mappingsUrl != null ? '✓' : '×') +
+                    " Mappings\n" +
+                    (updatePackage.apkUrl != null ? '✓' : '×') +
+                    " SnapMod APK\n\n" +
+                    updatePackage.release.body;
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Update Available")
+                    .setMessage(message)
+                    .setPositiveButton("Download", (dialogInterface, i) -> {
+                        if (updatePackage.mappingsUrl != null) {
+                            updates.installMappings(updatePackage,
+                                    success -> runOnUiThread(() -> onMappingsInstallationStatus(success)));
+                        }
+
+                        if (updatePackage.apkUrl != null) {
+                            Toast.makeText(this, "You must install the new APK from your downloads folder.", Toast.LENGTH_SHORT).show();
+                            updates.downloadApk(updatePackage);
+                        }
+                    })
+                    .show();
+        }
+    }
+
+    protected void onMappingsInstallationStatus(boolean success) {
+        Toast.makeText(this,
+                success ? "New mappings installed successfully." : "Error installing new mappings.",
+                Toast.LENGTH_SHORT).show();
+    }
 
     public void onCreatePreferences(SettingsFragment fragment) {
 
