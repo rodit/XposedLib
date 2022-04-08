@@ -84,8 +84,8 @@ public class UpdateManager {
     public void downloadApk(UpdatePackage updatePackage) {
         DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
         downloadManager.enqueue(new DownloadManager.Request(Uri.parse(updatePackage.apkUrl))
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, context.getApplicationInfo().name + "-" + updatePackage.release.tag_name + ".apk")
-                .setTitle(context.getApplicationInfo().name + " " + updatePackage.release.tag_name));
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, context.getPackageName() + "-" + updatePackage.release.tag_name + ".apk")
+                .setTitle(context.getPackageName() + " " + updatePackage.release.tag_name));
     }
 
     private void handleReleaseResponse(Release release) {
