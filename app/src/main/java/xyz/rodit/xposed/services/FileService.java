@@ -61,11 +61,12 @@ public class FileService extends Service {
                                     .setDescription(description)
                                     .setDestinationUri(Uri.parse(destination)));
                         } else {
+                            String destinationPath = getDestinationFile(destination);
                             new Thread(() -> {
                                 try {
                                     URL url = new URL(source);
                                     try (InputStream in = url.openStream();
-                                         OutputStream out = new FileOutputStream(destination)) {
+                                         OutputStream out = new FileOutputStream(destinationPath)) {
                                         StreamUtils.copyTo(in, out);
                                     }
                                 } catch (Exception e) {
@@ -81,6 +82,27 @@ public class FileService extends Service {
                     super.handleMessage(msg);
                     break;
             }
+        }
+
+        private static String getDestinationFile(String destinationUri) {
+            if (destinationUri.startsWith("file:")) {
+                boolean foundSlash = false;
+                int i = 0;
+                for (; i < destinationUri.length(); i++) {
+                    char c = destinationUri.charAt(i);
+                    if (c == '/' && !foundSlash) {
+                        foundSlash = true;
+                        continue;
+                    }
+                    if (c != '/' && foundSlash) {
+                        break;
+                    }
+                }
+
+                destinationUri = destinationUri.substring(i - 1);
+            }
+
+            return destinationUri;
         }
     }
 }
