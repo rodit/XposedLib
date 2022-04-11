@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
 
+import io.noties.markwon.Markwon;
 import xyz.rodit.xposed.updates.UpdateManager;
 import xyz.rodit.xposed.updates.model.UpdatePackage;
 import xyz.rodit.xposed.utils.Consumer;
@@ -24,6 +26,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     protected UpdateManager updates;
 
+    private Markwon markwon;
+
     public SettingsActivity(int preferenceResource) {
         SettingsActivity.preferenceResource = preferenceResource;
     }
@@ -31,6 +35,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        markwon = Markwon.create(this);
         updates = new UpdateManager(this, update -> runOnUiThread(() -> onUpdateFound(update)));
 
         setContentView(R.layout.settings_activity);
@@ -51,16 +56,18 @@ public class SettingsActivity extends AppCompatActivity {
 
     protected void onUpdateFound(UpdatePackage updatePackage) {
         if (updatePackage.mappingsUrl != null || updatePackage.apkUrl != null) {
-            String message = "Updates:\n" +
-                    (updatePackage.mappingsUrl != null ? '✓' : '×') +
-                    " Mappings\n" +
+            String message = (updatePackage.mappingsUrl != null ? '✓' : '×') +
+                    " Mappings\n\n" +
                     (updatePackage.apkUrl != null ? '✓' : '×') +
                     " Module APK\n\n" +
                     updatePackage.release.body;
 
+            TextView changelogView = new TextView(this);
+            changelogView.setPadding(32, 32, 32, 32);
+            markwon.setMarkdown(changelogView, message);
             new AlertDialog.Builder(this)
                     .setTitle("Update Available")
-                    .setMessage(message)
+                    .setView(changelogView)
                     .setPositiveButton("Download", (dialogInterface, i) -> {
                         if (updatePackage.mappingsUrl != null) {
                             updates.installMappings(updatePackage,
