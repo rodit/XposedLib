@@ -80,7 +80,7 @@ public class ConfigurationClient {
         String val = getString(key);
         try {
             return Integer.parseInt(val);
-        } catch (NumberFormatException e) {
+        } catch (Throwable e) {
             return defaultValue;
         }
     }
@@ -93,7 +93,7 @@ public class ConfigurationClient {
         String val = getString(key);
         try {
             return Long.parseLong(val);
-        } catch (NumberFormatException e) {
+        } catch (Throwable e) {
             return defaultValue;
         }
     }
@@ -106,7 +106,7 @@ public class ConfigurationClient {
         String val = getString(key);
         try {
             return Float.parseFloat(val);
-        } catch (NumberFormatException e) {
+        } catch (Throwable e) {
             return defaultValue;
         }
     }
@@ -119,7 +119,7 @@ public class ConfigurationClient {
         String val = getString(key);
         try {
             return Double.parseDouble(val);
-        } catch (NumberFormatException e) {
+        } catch (Throwable e) {
             return defaultValue;
         }
     }
